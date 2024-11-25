@@ -1,0 +1,90 @@
+// globale Eskalation
+#include <Arduino.h>
+int ledPin = D10;
+bool ledState = false;
+int mode = 0; // 0 = ON, 1 = SINGLE_BLINK, 2 = LONG_BLINK, 3 = OFF
+int blinkCounter = 0;
+unsigned long lastMillis = 0;
+unsigned long delayTime = 0;
+bool isDelaying = false;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  // ON mode
+  if (mode == 0) {
+    if (!isDelaying) {
+      digitalWrite(ledPin, HIGH);
+      Serial.println("ON");
+      delayTime = 2000;
+      isDelaying = true;
+      lastMillis = currentMillis;
+    }
+    if (currentMillis - lastMillis > delayTime) {
+      isDelaying = false;
+      mode = 1;
+    }
+  }
+
+  // SINGLE_BLINK mode
+  else if (mode == 1) {
+    if (blinkCounter < 10) {
+      if (!isDelaying) {
+        digitalWrite(ledPin, !ledState);
+        ledState = !ledState;
+        Serial.println("SINGLE_BLINK");
+        delayTime = ledState ? 200 : 200;
+        isDelaying = true;
+        lastMillis = currentMillis;
+      }
+      if (currentMillis - lastMillis > delayTime) {
+        isDelaying = false;
+        blinkCounter++;
+      }
+    } else {
+      blinkCounter = 0;
+      mode = 2;
+    }
+  }
+
+  // LONG_BLINK mode
+  else if (mode == 2) {
+    if (blinkCounter < 3) {
+      if (!isDelaying) {
+        digitalWrite(ledPin, !ledState);
+        ledState = !ledState;
+        Serial.println("LONG_BLINK");
+        delayTime = ledState ? 1000 : 1000;
+        isDelaying = true;
+        lastMillis = currentMillis;
+      }
+      if (currentMillis - lastMillis > delayTime) {
+        isDelaying = false;
+        blinkCounter++;
+      }
+    } else {
+      blinkCounter = 0;
+      mode = 3;
+    }
+  }
+
+  // OFF mode
+  else if (mode == 3) {
+    if (!isDelaying) {
+      digitalWrite(ledPin, LOW);
+      Serial.println("OFF");
+      delayTime = 2000;
+      isDelaying = true;
+      lastMillis = currentMillis;
+    }
+    if (currentMillis - lastMillis > delayTime) {
+      isDelaying = false;
+      mode = 0;
+    }
+  }
+}
